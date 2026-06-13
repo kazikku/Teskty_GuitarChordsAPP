@@ -1,0 +1,33 @@
+name: Auto Update Index
+
+# Bot uruchomi się tylko wtedy, gdy wrzucisz zmiany na gałąź "main"
+# i tylko wtedy, gdy dodasz lub zmienisz jakiś plik tekstowy
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.txt'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Pobranie repozytorium
+        uses: actions/checkout@v4
+
+      - name: Generowanie nowego pliku index.txt
+        run: |
+          # Czyta wszystkie pliki .txt, wyrzuca z listy samego "index.txt" i nadpisuje plik
+          ls -1 *.txt | grep -v "index.txt" > index.txt
+
+      - name: Zapisanie i wypchnięcie zmian
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.txt
+          # Bot próbuje zapisać zmiany. Jeśli nic się nie zmieniło, ignoruje błąd
+          git commit -m "Automatyczna aktualizacja index.txt" || echo "Brak zmian do zapisania"
+          git push
